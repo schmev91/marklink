@@ -1,4 +1,4 @@
-# 🔗 MarkLink
+# [🔗 MarkLink]([url](https://schmev91.github.io/marklink/))
 
 The sole purpose of this project is to view Markdown on the web and share it via embed links that do not require storing Markdown on any cloud. It is a beautiful, static Markdown editor with **live preview**, **Mermaid diagram support**, **syntax highlighting**, and **shareable links**
 ## ✨ Features
