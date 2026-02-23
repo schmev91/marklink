@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="MarkLink — A beautiful CSV viewer with table view, column filtering, sorting, and shareable links.">
+  <title>MarkLink — CSV Viewer &amp; Editor</title>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- highlight.js theme (GitHub-style, supports both light/dark) -->
+  <link id="hljs-theme-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" disabled>
+  <link id="hljs-theme-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+
+  <!-- Favicon (inline SVG) -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔗</text></svg>">
+</head>
+<body>
+  <!-- ===== Header ===== -->
+  <header class="header" id="header">
+    <div class="logo">
+      <a class="github-avatar" href="https://github.com/schmev91" target="_blank" rel="noopener noreferrer" title="@schmev91 on GitHub">
+        <img src="https://github.com/schmev91.png" alt="schmev91" width="30" height="30">
+      </a>
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+        </svg>
+      </div>
+      <span>MarkLink</span>
+      <!-- Mode switcher -->
+      <div class="mode-switcher">
+        <a href="index.html" class="mode-tab" id="mode-markdown">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          MD
+        </a>
+        <a href="json.html" class="mode-tab" id="mode-json">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+          JSON
+        </a>
+        <a href="csv.html" class="mode-tab active" id="mode-csv">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <line x1="3" y1="9" x2="21" y2="9"/>
+            <line x1="3" y1="15" x2="21" y2="15"/>
+            <line x1="9" y1="3" x2="9" y2="21"/>
+            <line x1="15" y1="3" x2="15" y2="21"/>
+          </svg>
+          CSV
+        </a>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-icon collapse-btn" id="toggle-editor-btn" data-tooltip="Toggle Editor" aria-label="Toggle Editor">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <line x1="9" y1="3" x2="9" y2="21"/>
+        </svg>
+      </button>
+      <button class="btn btn-icon collapse-btn" id="toggle-preview-btn" data-tooltip="Toggle Preview" aria-label="Toggle Preview">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <line x1="15" y1="3" x2="15" y2="21"/>
+        </svg>
+      </button>
+      <button class="btn" id="csv-convert-json-btn" aria-label="Convert to JSON">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="17 1 21 5 17 9"/>
+          <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+          <polyline points="7 23 3 19 7 15"/>
+          <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+        </svg>
+        <span class="btn-label-mobile-hide">→ JSON</span>
+      </button>
+      <button class="btn" id="csv-download-btn" aria-label="Download CSV">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        <span class="btn-label-mobile-hide">Export</span>
+      </button>
+      <button class="btn" id="share-btn" aria-label="Share">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="18" cy="5" r="3"/>
+          <circle cx="6" cy="12" r="3"/>
+          <circle cx="18" cy="19" r="3"/>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+        </svg>
+        <span class="btn-label-mobile-hide">Share</span>
+      </button>
+      <button class="btn btn-icon" id="theme-toggle-btn" aria-label="Toggle Theme">
+        <!-- Sun icon (shown in dark mode) -->
+        <svg class="icon-sun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"/>
+          <line x1="12" y1="1" x2="12" y2="3"/>
+          <line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/>
+          <line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+        <!-- Moon icon (shown in light mode) -->
+        <svg class="icon-moon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== Main Content ===== -->
+  <main class="main-container" id="main-container">
+    <!-- Editor Panel -->
+    <div class="editor-panel" id="editor-panel" style="width: 50%;">
+      <div class="panel-header">
+        <span class="panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <line x1="3" y1="9" x2="21" y2="9"/>
+            <line x1="9" y1="3" x2="9" y2="21"/>
+          </svg>
+          CSV Editor
+        </span>
+        <div class="panel-header-right">
+          <span class="csv-validation" id="csv-validation"></span>
+          <button class="btn btn-icon" id="collapse-editor-btn" data-tooltip="Hide Editor" aria-label="Hide Editor" style="padding: 4px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="11 17 6 12 11 7"/>
+              <polyline points="18 17 13 12 18 7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Textarea -->
+      <textarea
+        class="editor-textarea"
+        id="csv-editor"
+        placeholder="Paste or type CSV here..."
+        spellcheck="false"
+        aria-label="CSV Editor"
+      ></textarea>
+    </div>
+
+    <!-- Splitter -->
+    <div class="splitter" id="splitter" role="separator" aria-label="Resize panels"></div>
+
+    <!-- Preview Panel -->
+    <div class="preview-panel" id="preview-panel">
+      <div class="panel-header csv-panel-header">
+        <div class="panel-header-left">
+          <span class="panel-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            Table View
+          </span>
+          <span class="csv-status" id="csv-status"></span>
+        </div>
+        <div class="panel-header-right">
+          <!-- Column visibility dropdown -->
+          <div class="csv-column-dropdown-wrapper">
+            <button class="btn btn-icon btn-tiny" id="csv-columns-btn" data-tooltip="Show/Hide Columns" aria-label="Show/Hide Columns">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7m0-18H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7m0-18v18"/>
+              </svg>
+            </button>
+            <div class="csv-column-dropdown" id="csv-column-dropdown"></div>
+          </div>
+          <button class="btn btn-icon btn-tiny" id="csv-clear-filters-btn" data-tooltip="Clear All Filters" aria-label="Clear All Filters">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+              <line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+          </button>
+          <button class="btn btn-icon" id="collapse-preview-btn" data-tooltip="Hide Preview" aria-label="Hide Preview" style="padding: 4px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="13 17 18 12 13 7"/>
+              <polyline points="6 17 11 12 6 7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <!-- Search Bar -->
+      <div class="csv-search-bar" id="csv-search-bar">
+        <svg class="csv-search-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="csv-search-input" class="csv-search-input" placeholder="Search across all cells..." aria-label="Search CSV">
+        <span class="csv-search-count" id="csv-search-count"></span>
+      </div>
+      <div class="csv-preview-content" id="csv-preview-content"></div>
+    </div>
+  </main>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">
+    <span class="toast-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+        <polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+    </span>
+    <span id="toast-message">Copied!</span>
+  </div>
+
+  <!-- ===== Dependencies (CDN) ===== -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+
+  <!-- ===== Application Modules ===== -->
+  <script src="js/theme.js"></script>
+  <script src="js/splitter.js"></script>
+  <script src="js/csv-editor.js"></script>
+  <script src="js/csv-preview.js"></script>
+  <script src="js/csv-share.js"></script>
+  <script src="js/csv-app.js"></script>
+</body>
+</html>

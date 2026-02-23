@@ -1,18 +1,36 @@
 # 🔗 [MarkLink](https://schmev91.github.io/marklink/)
 
-The sole purpose of this project is to view Markdown on the web and share it via embed links that do not require storing Markdown on any cloud. It is a beautiful, static Markdown editor with **live preview**, **Mermaid diagram support**, **syntax highlighting**, and **shareable links**
+A beautiful, static editor for **Markdown**, **JSON**, and **CSV** — with live preview, shareable links, and zero cloud storage. Everything stays in the URL.
 ## ✨ Features
 
-- 📝 **Live Markdown editor** with rich toolbar (bold, italic, headings, lists, code, tables, etc.)
+### Markdown Mode
+- 📝 **Live editor** with rich toolbar (bold, italic, headings, lists, code, tables, etc.)
 - 📊 **Mermaid diagram rendering** — flowcharts, sequence diagrams, and more
 - 🎨 **Syntax highlighting** — powered by highlight.js
+- ⌨️ **Keyboard shortcuts** — Ctrl+B, Ctrl+I, Ctrl+K, Tab
+- 📋 **Smart lists** — auto-continues lists and task items on Enter
+
+### JSON Mode
+- 🌳 **Tree view** — collapsible/expandable JSON structure
+- 📦 **Nodes view** — card-based node display
+- 🔍 **Search** — find keys & values with navigation
+- ✅ **Validation** — real-time JSON syntax checking
+- 🎨 **Auto-format** — prettify JSON with Ctrl+Shift+F
+
+### CSV Mode
+- 📊 **Interactive table view** — sticky headers, zebra striping
+- ↕️ **Column sorting** — click headers to sort asc/desc
+- 🔍 **Per-column filtering** — filter row below headers
+- 👁️ **Column visibility** — hide/unhide columns via dropdown
+- 🔄 **CSV → JSON** — convert and open in JSON mode
+- 📥 **CSV export** — download as `.csv` file
+
+### Shared
 - 🌗 **Dark & Light mode** — with system preference detection
 - 📐 **Resizable panels** — drag the splitter to resize editor/preview
 - 👁️ **Collapsible panels** — hide the editor or preview entirely
-- 🔗 **Share via URL** — compresses markdown with lz-string for short shareable links
+- 🔗 **Share via URL** — lz-string compression for shareable links
 - 📱 **Responsive design** — works great on desktop and mobile
-- ⌨️ **Keyboard shortcuts** — Ctrl+B (bold), Ctrl+I (italic), Ctrl+K (link), Tab (indent)
-- 📋 **Smart lists** — auto-continues lists and task items on Enter
 
 ## 🛠️ Tech Stack
 
@@ -27,15 +45,25 @@ The sole purpose of this project is to view Markdown on the web and share it via
 
 ```
 marklink/
-├── index.html          # Single HTML entry point
+├── index.html          # Markdown mode
+├── json.html           # JSON mode
+├── csv.html            # CSV mode
 ├── css/
-│   └── style.css       # Design system (light/dark themes, responsive)
+│   └── style.css       # Design system (all modes, light/dark, responsive)
 ├── js/
-│   ├── app.js          # Main orchestration
-│   ├── editor.js       # Editor & toolbar
+│   ├── app.js          # Markdown orchestration
+│   ├── editor.js       # Markdown editor & toolbar
 │   ├── preview.js      # Markdown rendering + Mermaid
-│   ├── share.js        # URL compression & sharing
-│   ├── splitter.js     # Resizable panel logic
-│   └── theme.js        # Dark/light mode
+│   ├── share.js        # Markdown sharing
+│   ├── json-app.js     # JSON orchestration
+│   ├── json-editor.js  # JSON editor with validation
+│   ├── json-preview.js # JSON tree & nodes view
+│   ├── json-share.js   # JSON sharing
+│   ├── csv-app.js      # CSV orchestration
+│   ├── csv-editor.js   # CSV editor with validation
+│   ├── csv-preview.js  # CSV table, sort, filter, columns
+│   ├── csv-share.js    # CSV sharing
+│   ├── splitter.js     # Resizable panel logic (shared)
+│   └── theme.js        # Dark/light mode (shared)
 └── README.md
 ```
