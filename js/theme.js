@@ -92,28 +92,28 @@ const Theme = (() => {
   }
 
   function tickColorCycle() {
-    const now = performance.now();
-    const elapsed = now - cycleStartTime;
-    const totalCycle = CYCLE_DURATION * ACCENT_COLORS.length;
-    const pos = (elapsed % totalCycle) / CYCLE_DURATION;
-    const idx = Math.floor(pos);
-    const t = pos - idx; // 0..1 fraction between two colors
-    const from = ACCENT_COLORS[idx % ACCENT_COLORS.length];
-    const to = ACCENT_COLORS[(idx + 1) % ACCENT_COLORS.length];
+    // const now = performance.now();
+    // const elapsed = now - cycleStartTime;
+    // const totalCycle = CYCLE_DURATION * ACCENT_COLORS.length;
+    // const pos = (elapsed % totalCycle) / CYCLE_DURATION;
+    // const idx = Math.floor(pos);
+    // const t = pos - idx; // 0..1 fraction between two colors
+    // const from = ACCENT_COLORS[idx % ACCENT_COLORS.length];
+    // const to = ACCENT_COLORS[(idx + 1) % ACCENT_COLORS.length];
 
-    const r = Math.round(lerp(from.r, to.r, t));
-    const g = Math.round(lerp(from.g, to.g, t));
-    const b = Math.round(lerp(from.b, to.b, t));
+    // const r = Math.round(lerp(from.r, to.r, t));
+    // const g = Math.round(lerp(from.g, to.g, t));
+    // const b = Math.round(lerp(from.b, to.b, t));
 
-    const hex = `rgb(${r}, ${g}, ${b})`;
-    const root = document.documentElement;
-    root.style.setProperty('--accent', hex);
-    root.style.setProperty('--accent-hover', `rgb(${Math.max(0, r - 15)}, ${Math.max(0, g - 15)}, ${Math.max(0, b - 15)})`);
-    root.style.setProperty('--accent-subtle', `rgba(${r}, ${g}, ${b}, 0.13)`);
-    root.style.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, 0.28)`);
-    root.style.setProperty('--bg-hover', `rgba(${r}, ${g}, ${b}, 0.10)`);
+    // const hex = `rgb(${r}, ${g}, ${b})`;
+    // const root = document.documentElement;
+    // root.style.setProperty('--accent', hex);
+    // root.style.setProperty('--accent-hover', `rgb(${Math.max(0, r - 15)}, ${Math.max(0, g - 15)}, ${Math.max(0, b - 15)})`);
+    // root.style.setProperty('--accent-subtle', `rgba(${r}, ${g}, ${b}, 0.13)`);
+    // root.style.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, 0.28)`);
+    // root.style.setProperty('--bg-hover', `rgba(${r}, ${g}, ${b}, 0.10)`);
 
-    colorAnimFrame = requestAnimationFrame(tickColorCycle);
+    // colorAnimFrame = requestAnimationFrame(tickColorCycle);
   }
 
   return { init, get, toggle, onChange };

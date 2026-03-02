@@ -69,14 +69,18 @@ const JsonApp = (() => {
       JsonPreview.onThemeChange(theme);
     });
 
-    // Wire editor input to preview rendering
+    // Wire editor input to preview rendering (debounced)
     const editor = JsonEditor.getElement();
+    let renderTimer;
     if (editor) {
       editor.addEventListener('input', () => {
-        const val = JsonEditor.getValue().trim();
-        if (val) {
-          JsonPreview.render(val);
-        }
+        clearTimeout(renderTimer);
+        renderTimer = setTimeout(() => {
+          const val = JsonEditor.getValue().trim();
+          if (val) {
+            JsonPreview.render(val);
+          }
+        }, 300);
       });
     }
 

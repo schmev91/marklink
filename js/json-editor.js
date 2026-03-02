@@ -6,6 +6,7 @@ const JsonEditor = (() => {
   let textarea;
   let validationEl;
   let isValid = true;
+  let validateTimer;
 
   function init() {
     textarea = document.getElementById('json-editor');
@@ -13,7 +14,12 @@ const JsonEditor = (() => {
     if (!textarea) return;
 
     textarea.addEventListener('keydown', handleKeydown);
-    textarea.addEventListener('input', validate);
+    textarea.addEventListener('input', debouncedValidate);
+  }
+
+  function debouncedValidate() {
+    clearTimeout(validateTimer);
+    validateTimer = setTimeout(validate, 300);
   }
 
   function handleKeydown(e) {

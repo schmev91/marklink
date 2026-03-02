@@ -8,8 +8,6 @@ const Preview = (() => {
   let debounceTimer;
   let mermaidIdCounter = 0;
   let lastMermaidSources = new Map(); // cache mermaid source to avoid re-rendering unchanged diagrams
-  let isRenderPending = false;
-  let pendingMarkdown = '';
 
   function init() {
     previewEl = document.getElementById('preview-content');
@@ -68,21 +66,13 @@ const Preview = (() => {
 
   function render(markdown) {
     clearTimeout(debounceTimer);
-    pendingMarkdown = markdown;
     debounceTimer = setTimeout(() => {
-      if (!isRenderPending) {
-        isRenderPending = true;
-        requestAnimationFrame(() => {
-          doRender(pendingMarkdown);
-          isRenderPending = false;
-        });
-      }
+      requestAnimationFrame(() => doRender(markdown));
     }, 300);
   }
 
   function renderImmediate(markdown) {
     clearTimeout(debounceTimer);
-    isRenderPending = false;
     doRender(markdown);
   }
 

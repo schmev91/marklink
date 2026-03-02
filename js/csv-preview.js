@@ -198,13 +198,17 @@ const CsvPreview = (() => {
     });
     html += '</tr></thead>';
 
-    // Body
+    // Body — cap rendered rows for performance
+    const MAX_RENDER_ROWS = 500;
+    const displayRows = filteredRows.length > MAX_RENDER_ROWS ? filteredRows.slice(0, MAX_RENDER_ROWS) : filteredRows;
+    const isTruncated = filteredRows.length > MAX_RENDER_ROWS;
+
     html += '<tbody>';
-    if (filteredRows.length === 0) {
+    if (displayRows.length === 0) {
       const visibleCols = headers.filter((_, i) => !hiddenColumns.has(i)).length;
       html += `<tr><td colspan="${visibleCols}" class="csv-no-results">No matching rows</td></tr>`;
     } else {
-      filteredRows.forEach((row, ri) => {
+      displayRows.forEach((row, ri) => {
         html += `<tr class="${ri % 2 === 1 ? 'csv-row-alt' : ''}">`;
         row.forEach((cell, ci) => {
           if (hiddenColumns.has(ci)) return;
@@ -213,6 +217,10 @@ const CsvPreview = (() => {
         });
         html += '</tr>';
       });
+      if (isTruncated) {
+        const visibleCols = headers.filter((_, i) => !hiddenColumns.has(i)).length;
+        html += `<tr><td colspan="${visibleCols}" class="csv-no-results" style="text-align:center;font-style:italic;">Showing ${MAX_RENDER_ROWS} of ${filteredRows.length} rows for performance</td></tr>`;
+      }
     }
     html += '</tbody></table></div>';
 

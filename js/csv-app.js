@@ -32,12 +32,16 @@ Nathan Kim,30,Minneapolis,Data Science,93000,Active`;
       CsvPreview.onThemeChange(theme);
     });
 
-    // Wire editor input to preview rendering
+    // Wire editor input to preview rendering (debounced)
     const editor = CsvEditor.getElement();
+    let renderTimer;
     if (editor) {
       editor.addEventListener('input', () => {
-        const val = CsvEditor.getValue().trim();
-        CsvPreview.render(val);
+        clearTimeout(renderTimer);
+        renderTimer = setTimeout(() => {
+          const val = CsvEditor.getValue().trim();
+          CsvPreview.render(val);
+        }, 300);
       });
     }
 
