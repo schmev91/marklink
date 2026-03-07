@@ -30,6 +30,7 @@ A beautiful, static editor for **Markdown**, **JSON**, and **CSV** — with live
 - 📐 **Resizable panels** — drag the splitter to resize editor/preview
 - 👁️ **Collapsible panels** — hide the editor or preview entirely
 - 🔗 **Share via URL** — lz-string compression for shareable links
+- 📸 **Preview image export** — generate a PNG snapshot of the preview when you click “Share” (opens in a new tab / clipboard) without bloating the URL
 - 📱 **Responsive design** — works great on desktop and mobile
 
 ## 🛠️ Tech Stack

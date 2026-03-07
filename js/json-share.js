@@ -29,7 +29,7 @@ const JsonShare = (() => {
     return null;
   }
 
-  function shareCurrentContent() {
+  async function shareCurrentContent() {
     const content = JsonEditor.getValue();
     if (!content.trim()) {
       showToast('Nothing to share — paste some JSON first!');
@@ -54,6 +54,39 @@ const JsonShare = (() => {
     });
 
     history.replaceState(null, '', `#content=${compressed}`);
+
+    if (window.JsonPreview && typeof JsonPreview.captureImage === 'function') {
+      try {
+        const dataUrl = await JsonPreview.captureImage();
+        if (dataUrl) {
+          const imgWindow = window.open(dataUrl, '_blank');
+          if (imgWindow) {
+            showToast('Preview image opened in new tab');
+          } else {
+            showToast('Preview image generated (popup blocked).');
+          }
+          if (navigator.clipboard && navigator.clipboard.write) {
+            const blob = dataURLToBlob(dataUrl);
+            const item = new ClipboardItem({ 'image/png': blob });
+            navigator.clipboard.write([item]).catch(() => {});
+          }
+        }
+      } catch (err) {
+        console.error('failed to generate JSON preview image', err);
+      }
+    }
+  }
+
+  function dataURLToBlob(dataUrl) {
+    const parts = dataUrl.split(',');
+    const meta = parts[0].match(/:(.*?);/);
+    const mime = meta ? meta[1] : 'image/png';
+    const binary = atob(parts[1]);
+    const array = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      array[i] = binary.charCodeAt(i);
+    }
+    return new Blob([array], { type: mime });
   }
 
   function fallbackCopy(text) {

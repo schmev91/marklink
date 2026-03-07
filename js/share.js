@@ -35,7 +35,7 @@ const Share = (() => {
   /**
    * Compress current editor content and copy shareable URL to clipboard
    */
-  function shareCurrentContent() {
+  async function shareCurrentContent() {
     const content = Editor.getValue();
     if (!content.trim()) {
       showToast('Nothing to share — write some markdown first!');
@@ -45,7 +45,7 @@ const Share = (() => {
     const compressed = LZString.compressToEncodedURIComponent(content);
     const url = `${window.location.origin}${window.location.pathname}#content=${compressed}`;
 
-    // Copy to clipboard
+    // copy link to clipboard
     navigator.clipboard.writeText(url).then(() => {
       showToast('Share link copied to clipboard!');
     }).catch(() => {
@@ -53,8 +53,49 @@ const Share = (() => {
       fallbackCopy(url);
     });
 
-    // Also update the URL bar without reload
+    // update URL bar so users can bookmark after generating link
     history.replaceState(null, '', `#content=${compressed}`);
+
+    // generate a preview image but do NOT embed it in the URL
+    if (window.Preview && typeof Preview.captureImage === 'function') {
+      try {
+        const dataUrl = await Preview.captureImage();
+        if (dataUrl) {
+          // open the generated image in a new tab so user can save/upload it
+          const imgWindow = window.open(dataUrl, '_blank');
+          if (imgWindow) {
+            imgWindow.document.title = 'MarkLink preview';
+            showToast('Preview image opened in new tab');
+          } else {
+            showToast('Preview image generated (popup blocked).');
+          }
+
+          // attempt to also copy the image to clipboard if supported
+          if (navigator.clipboard && navigator.clipboard.write) {
+            const blob = dataURLToBlob(dataUrl);
+            const item = new ClipboardItem({ 'image/png': blob });
+            navigator.clipboard.write([item]).catch(() => {
+              /* ignore failures silently */
+            });
+          }
+        }
+      } catch (err) {
+        console.error('failed to generate preview image', err);
+      }
+    }
+  }
+
+  // convert data URL to a Blob object (used for clipboard copy)
+  function dataURLToBlob(dataUrl) {
+    const parts = dataUrl.split(',');
+    const meta = parts[0].match(/:(.*?);/);
+    const mime = meta ? meta[1] : 'image/png';
+    const binary = atob(parts[1]);
+    const array = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      array[i] = binary.charCodeAt(i);
+    }
+    return new Blob([array], { type: mime });
   }
 
   function fallbackCopy(text) {

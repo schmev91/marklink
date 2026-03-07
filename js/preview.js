@@ -161,11 +161,27 @@ const Preview = (() => {
     }
   }
 
+  /**
+   * Capture the currently rendered preview pane as a PNG data URL.
+   * Uses html2canvas if available. Returns null on failure.
+   */
+  async function captureImage() {
+    if (!previewEl || typeof html2canvas === 'undefined') return null;
+    try {
+      // scale up to improve resolution for sharing
+      const canvas = await html2canvas(previewEl, { backgroundColor: null, scale: 2 });
+      return canvas.toDataURL('image/png');
+    } catch (err) {
+      console.error('Preview.captureImage failed:', err);
+      return null;
+    }
+  }
+
   function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
   }
 
-  return { init, render, renderImmediate, onThemeChange };
+  return { init, render, renderImmediate, onThemeChange, captureImage };
 })();

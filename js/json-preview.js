@@ -411,5 +411,20 @@ const JsonPreview = (() => {
     }
   }
 
-  return { init, render, renderImmediate, onThemeChange };
+  /**
+   * Capture the JSON preview pane as a PNG data URL. Falls back to null if
+   * html2canvas isn't present or an error occurs.
+   */
+  async function captureImage() {
+    if (!previewEl || typeof html2canvas === 'undefined') return null;
+    try {
+      const canvas = await html2canvas(previewEl, { backgroundColor: null, scale: 2 });
+      return canvas.toDataURL('image/png');
+    } catch (err) {
+      console.error('JsonPreview.captureImage failed:', err);
+      return null;
+    }
+  }
+
+  return { init, render, renderImmediate, onThemeChange, captureImage };
 })();

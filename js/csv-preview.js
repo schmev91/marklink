@@ -392,6 +392,20 @@ const CsvPreview = (() => {
     if (headers.length > 0) renderTable();
   }
 
+  /**
+   * Capture the current CSV preview as a PNG data URL.
+   */
+  async function captureImage() {
+    if (!container || typeof html2canvas === 'undefined') return null;
+    try {
+      const canvas = await html2canvas(container, { backgroundColor: null, scale: 2 });
+      return canvas.toDataURL('image/png');
+    } catch (err) {
+      console.error('CsvPreview.captureImage failed:', err);
+      return null;
+    }
+  }
+
   /* ---- Helpers ---- */
   function escapeHtml(text) {
     const div = document.createElement('div');
@@ -399,5 +413,5 @@ const CsvPreview = (() => {
     return div.innerHTML;
   }
 
-  return { init, render, toJSON, getHeaders, getRows, onThemeChange };
+  return { init, render, toJSON, getHeaders, getRows, onThemeChange, captureImage };
 })();
