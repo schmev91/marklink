@@ -235,7 +235,7 @@ const CsvPreview = (() => {
     });
 
     container.querySelectorAll('.csv-filter-input').forEach(input => {
-      input.addEventListener('input', () => {
+      input.addEventListener('input', debounce(() => {
         const col = parseInt(input.dataset.col);
         columnFilters[col] = input.value;
         renderTable();

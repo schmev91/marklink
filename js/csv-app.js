@@ -57,6 +57,14 @@ Nathan Kim,30,Minneapolis,Data Science,93000,Active`;
       downloadBtn.addEventListener('click', downloadCsv);
     }
 
+    // Wire load file button
+    const loadBtn = document.getElementById('csv-load-file-btn');
+    const fileInput = document.getElementById('csv-file-input');
+    if (loadBtn && fileInput) {
+      loadBtn.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', handleFileLoad);
+    }
+
     // Load content: URL shared > default
     const sharedContent = CsvShare.loadFromUrl();
     if (sharedContent) {
@@ -64,6 +72,28 @@ Nathan Kim,30,Minneapolis,Data Science,93000,Active`;
     } else {
       CsvEditor.setValue(DEFAULT_CSV);
     }
+  }
+
+  function handleFileLoad(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const encodingSelect = document.getElementById('csv-encoding-select');
+    const encoding = encodingSelect ? encodingSelect.value : 'UTF-8';
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      CsvEditor.setValue(e.target.result);
+      CsvPreview.render(e.target.result.trim());
+      showToast(`Loaded: ${file.name} (${encoding})`);
+    };
+    reader.onerror = () => {
+      showToast('Error reading file!');
+    };
+    reader.readAsText(file, encoding);
+
+    // Reset input to allow loading the same file again
+    event.target.value = '';
   }
 
   function convertToJson() {

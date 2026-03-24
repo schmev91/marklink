@@ -84,6 +84,14 @@ const JsonApp = (() => {
       });
     }
 
+    // Wire load file button
+    const loadBtn = document.getElementById('json-load-file-btn');
+    const fileInput = document.getElementById('json-file-input');
+    if (loadBtn && fileInput) {
+      loadBtn.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', handleFileLoad);
+    }
+
     // Load content: URL shared > default
     const sharedContent = JsonShare.loadFromUrl();
     if (sharedContent) {
@@ -91,6 +99,34 @@ const JsonApp = (() => {
     } else {
       JsonEditor.setValue(DEFAULT_JSON);
     }
+  }
+
+  function handleFileLoad(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      JsonEditor.setValue(e.target.result);
+      JsonPreview.render(e.target.result.trim());
+      showToast(`Loaded: ${file.name}`);
+    };
+    reader.onerror = () => {
+      showToast('Error reading file!');
+    };
+    reader.readAsText(file, 'UTF-8');
+
+    // Reset input to allow loading the same file again
+    event.target.value = '';
+  }
+
+  function showToast(message) {
+    const toast = document.getElementById('toast');
+    const msgEl = document.getElementById('toast-message');
+    if (!toast || !msgEl) return;
+    msgEl.textContent = message;
+    toast.classList.add('visible');
+    setTimeout(() => { toast.classList.remove('visible'); }, 2500);
   }
 
   // Start when DOM is ready

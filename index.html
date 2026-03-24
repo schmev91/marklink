@@ -73,6 +73,23 @@
           <line x1="15" y1="3" x2="15" y2="21"/>
         </svg>
       </button>
+      <div class="encoding-selector">
+        <select id="encoding-select" aria-label="File Encoding">
+          <option value="UTF-8">UTF-8</option>
+          <option value="Shift_JIS">Shift-JIS</option>
+          <option value="EUC-JP">EUC-JP</option>
+          <option value="ISO-2022-JP">ISO-2022-JP</option>
+        </select>
+      </div>
+      <button class="btn" id="load-file-btn" aria-label="Load File">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        <span class="btn-label-mobile-hide">Load</span>
+      </button>
+      <input type="file" id="file-input" accept=".md,.markdown,.txt" style="display: none;">
       <button class="btn" id="share-btn" aria-label="Share">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="18" cy="5" r="3"/>

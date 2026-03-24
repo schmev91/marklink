@@ -1498,6 +1498,35 @@ body {
   text-align: center;
 }
 
+/* Encoding Selector */
+.encoding-selector select {
+  padding: 6px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.75rem;
+  outline: none;
+  cursor: pointer;
+  min-width: 80px;
+  max-width: 120px;
+}
+
+.encoding-selector select:hover {
+  border-color: var(--border-strong);
+}
+
+.encoding-selector select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-subtle);
+}
+
+.encoding-selector select option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
 /* ---- CSV Preview Content ---- */
 .csv-preview-content {
   flex: 1;

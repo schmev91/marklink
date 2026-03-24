@@ -95,6 +95,14 @@ graph TD
       });
     }
 
+    // Wire load file button
+    const loadBtn = document.getElementById('load-file-btn');
+    const fileInput = document.getElementById('file-input');
+    if (loadBtn && fileInput) {
+      loadBtn.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', handleFileLoad);
+    }
+
     // Load content: URL shared content > default markdown
     const sharedContent = Share.loadFromUrl();
     if (sharedContent) {
@@ -102,6 +110,34 @@ graph TD
     } else {
       Editor.setValue(DEFAULT_MARKDOWN);
     }
+  }
+
+  function handleFileLoad(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      Editor.setValue(e.target.result);
+      Preview.render(e.target.result);
+      showToast(`Loaded: ${file.name}`);
+    };
+    reader.onerror = () => {
+      showToast('Error reading file!');
+    };
+    reader.readAsText(file, 'UTF-8');
+
+    // Reset input to allow loading the same file again
+    event.target.value = '';
+  }
+
+  function showToast(message) {
+    const toast = document.getElementById('toast');
+    const msgEl = document.getElementById('toast-message');
+    if (!toast || !msgEl) return;
+    msgEl.textContent = message;
+    toast.classList.add('visible');
+    setTimeout(() => { toast.classList.remove('visible'); }, 2500);
   }
 
   // Start when DOM is ready
