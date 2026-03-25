@@ -240,7 +240,7 @@ const CsvPreview = (() => {
         columnFilters[col] = input.value;
         renderTable();
         updateFilteredStatus();
-      });
+      }));
     });
 
     updateFilteredStatus();
@@ -397,6 +397,14 @@ const CsvPreview = (() => {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  function debounce(fn, delay = 150) {
+    let timeout;
+    return (...args) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => fn(...args), delay);
+    };
   }
 
   return { init, render, toJSON, getHeaders, getRows, onThemeChange };
