@@ -138,7 +138,8 @@ body {
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
   backdrop-filter: blur(12px);
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 100;
   transition: background var(--transition-normal), border-color var(--transition-normal);
 }
