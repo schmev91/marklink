@@ -36,9 +36,12 @@ The project is a static Markdown, JSON, and CSV editor built with plain HTML, CS
   - `csv-preview.js`: Renders CSV as interactive table (sorting, filtering, column visibility, search).
   - `csv-share.js`: URL compression/sharing for CSV.
   - `csv-app.js`: Glue code for the CSV mode.
+  - `storage.js`: Shared `localStorage` API for named saves, autosave slot, and per-mode preferences (`marklink.<mode>.<saves|autosave|preferences>` keys).
+  - `saves-ui.js`: Shared "Saves" panel UI (list/load/rename/delete + autosave toggle).
+  - `vim-mode.js`: Lazy CodeMirror 5 mount with vim keymap; activated only when the user toggles VIM mode in a given editor.
 - **Assets**:
-  - `css/style.css`: Styling for all modes (Markdown, JSON, CSV).
-  - CDN libraries: marked.js, highlight.js, mermaid.js, lz-string.js.
+  - `css/style.css`: Styling for all modes (Markdown, JSON, CSV) plus Saves panel and CodeMirror skin.
+  - CDN libraries: marked.js, highlight.js, mermaid.js, lz-string.js. CodeMirror 5 (`codemirror.min.js` + `keymap/vim.min.js` + per-mode addon) is **lazy-loaded** only when VIM mode is first enabled in a session.
 
 ## Commonly Used Files
 
@@ -60,3 +63,9 @@ The project is a static Markdown, JSON, and CSV editor built with plain HTML, CS
 - Because there is no build step, all dependencies are loaded from CDNs at runtime.
 - Any additions of new features (e.g., additional toolbar actions) should be reflected in the relevant module(s) and potentially updated tests (if they exist).
 - Future contributors can rely on this documentation for setting up a development environment quickly.
+
+<!-- SPECKIT START -->
+For additional context about technologies to be used, project structure,
+shell commands, and other important information, read the current plan:
+- `specs/002-vim-local-storage/plan.md`
+<!-- SPECKIT END -->

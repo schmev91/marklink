@@ -90,6 +90,18 @@
         <span class="btn-label-mobile-hide">Load</span>
       </button>
       <input type="file" id="file-input" accept=".md,.markdown,.txt" style="display: none;">
+      <button class="btn" id="saves-btn" aria-label="Saved documents">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+          <polyline points="17 21 17 13 7 13 7 21"/>
+          <polyline points="7 3 7 8 15 8"/>
+        </svg>
+        <span class="btn-label-mobile-hide">Saves</span>
+      </button>
+      <button class="btn" id="vim-toggle-btn" aria-label="Toggle VIM mode">
+        <span style="font-family: ui-monospace, monospace; font-weight: 700; font-size: 0.78rem;">VIM</span>
+      </button>
+      <span class="vim-mode-indicator" id="vim-mode-indicator" data-vim-mode="normal" aria-live="polite">NORMAL</span>
       <button class="btn" id="share-btn" aria-label="Share">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="18" cy="5" r="3"/>
@@ -258,6 +270,9 @@
   <script src="js/editor.js"></script>
   <script src="js/preview.js"></script>
   <script src="js/share.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/saves-ui.js"></script>
+  <script src="js/vim-mode.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

@@ -74,6 +74,14 @@ graph TD
 *Built with ❤️ using vanilla HTML, CSS, and JavaScript*
 `;
 
+  const MODE = 'markdown';
+  let savesUI = null;
+  let vimHandle = null;
+  let autosaveTimer = null;
+  let autosaveHardFlushTimer = null;
+  const AUTOSAVE_DEBOUNCE_MS = 1500;
+  const AUTOSAVE_HARD_FLUSH_MS = 15000;
+
   function init() {
     // Initialize modules
     Theme.init();
@@ -87,11 +95,26 @@ graph TD
       Preview.onThemeChange(theme);
     });
 
-    // Wire editor input to preview rendering
     const editor = Editor.getElement();
+
+    // VIM handle (attaches lazily on first enable())
+    if (editor && typeof MarkLinkVim !== 'undefined') {
+      vimHandle = MarkLinkVim.attach({
+        textareaEl: editor,
+        mode: MODE,
+        onModeChange: setVimIndicator,
+        onContentChange: (val) => {
+          Preview.render(val);
+          scheduleAutosave();
+        },
+      });
+    }
+
+    // Wire editor input to preview rendering and autosave
     if (editor) {
       editor.addEventListener('input', () => {
-        Preview.render(Editor.getValue());
+        Preview.render(getCurrentValue());
+        scheduleAutosave();
       });
     }
 
@@ -103,13 +126,170 @@ graph TD
       fileInput.addEventListener('change', handleFileLoad);
     }
 
-    // Load content: URL shared content > default markdown
+    // Storage / Saves wiring
+    initStorageFeatures();
+
+    // Load content: URL shared > autosave restore > default markdown
     const sharedContent = Share.loadFromUrl();
     if (sharedContent) {
-      Editor.setValue(sharedContent);
+      setCurrentValue(sharedContent);
     } else {
-      Editor.setValue(DEFAULT_MARKDOWN);
+      const restored = tryRestoreAutosave();
+      if (!restored) {
+        setCurrentValue(DEFAULT_MARKDOWN);
+      }
     }
+
+    // Apply persisted VIM preference (default OFF)
+    applyInitialVimPreference();
+
+    // Flush autosave on tab close
+    window.addEventListener('beforeunload', flushAutosave);
+  }
+
+  function getCurrentValue() {
+    if (vimHandle && vimHandle.isEnabled()) return vimHandle.getValue();
+    return Editor.getValue();
+  }
+
+  function setCurrentValue(text) {
+    if (vimHandle && vimHandle.isEnabled()) {
+      vimHandle.setValue(text);
+      Preview.render(text);
+    } else {
+      Editor.setValue(text);
+    }
+    if (savesUI) savesUI.setLoadedSnapshot(text);
+  }
+
+  function initStorageFeatures() {
+    if (typeof MarkLinkStorage === 'undefined') return;
+
+    const savesBtn = document.getElementById('saves-btn');
+    const vimBtn = document.getElementById('vim-toggle-btn');
+
+    if (!MarkLinkStorage.isAvailable()) {
+      if (savesBtn) savesBtn.disabled = true;
+      if (vimBtn) vimBtn.disabled = true;
+      const banner = document.createElement('div');
+      banner.className = 'storage-unavailable-banner';
+      banner.textContent = 'Local storage unavailable — saves and preferences are disabled in this browser session.';
+      document.body.insertBefore(banner, document.body.firstChild);
+      return;
+    }
+
+    if (typeof MarkLinkSavesUI !== 'undefined') {
+      savesUI = MarkLinkSavesUI.mount({
+        mode: MODE,
+        getContent: getCurrentValue,
+        setContent: setCurrentValue,
+      });
+      if (savesBtn) savesBtn.addEventListener('click', () => savesUI.open());
+    }
+
+    if (vimBtn && vimHandle) {
+      vimBtn.addEventListener('click', toggleVim);
+    }
+  }
+
+  function applyInitialVimPreference() {
+    if (typeof MarkLinkStorage === 'undefined') return;
+    if (!MarkLinkStorage.isAvailable()) return;
+    const prefs = MarkLinkStorage.readPreferences(MODE);
+    if (prefs.vim && vimHandle) {
+      enableVim();
+    }
+  }
+
+  function toggleVim() {
+    if (!vimHandle) return;
+    if (vimHandle.isEnabled()) {
+      disableVim();
+    } else {
+      enableVim();
+    }
+  }
+
+  function enableVim() {
+    const vimBtn = document.getElementById('vim-toggle-btn');
+    vimHandle.enable().then(() => {
+      MarkLinkStorage.writePreferences(MODE, { vim: true });
+      if (vimBtn) vimBtn.classList.add('vim-active');
+      showVimIndicator(true);
+    }).catch((err) => {
+      console.error('VIM enable failed', err);
+      MarkLinkStorage.writePreferences(MODE, { vim: false });
+      if (vimBtn) vimBtn.classList.remove('vim-active');
+      showVimIndicator(false);
+      alert('Failed to load VIM mode (CodeMirror). Check your network connection.');
+    });
+  }
+
+  function disableVim() {
+    const vimBtn = document.getElementById('vim-toggle-btn');
+    const content = vimHandle.getValue();
+    vimHandle.disable();
+    MarkLinkStorage.writePreferences(MODE, { vim: false });
+    if (vimBtn) vimBtn.classList.remove('vim-active');
+    showVimIndicator(false);
+    // Re-bind textarea input listener was lost when CM took over; re-attach.
+    const editor = Editor.getElement();
+    if (editor) {
+      editor.value = content;
+      editor.addEventListener('input', editorInputHandler);
+    }
+  }
+
+  function editorInputHandler() {
+    Preview.render(getCurrentValue());
+    scheduleAutosave();
+  }
+
+  function setVimIndicator(modeName) {
+    const ind = document.getElementById('vim-mode-indicator');
+    if (!ind) return;
+    ind.dataset.vimMode = modeName || 'normal';
+    ind.textContent = (modeName || 'normal').toUpperCase();
+  }
+
+  function showVimIndicator(visible) {
+    const ind = document.getElementById('vim-mode-indicator');
+    if (!ind) return;
+    if (visible) ind.classList.add('visible');
+    else ind.classList.remove('visible');
+  }
+
+  function scheduleAutosave() {
+    if (typeof MarkLinkStorage === 'undefined' || !MarkLinkStorage.isAvailable()) return;
+    const prefs = MarkLinkStorage.readPreferences(MODE);
+    if (!prefs.autosaveEnabled) return;
+    clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(flushAutosave, AUTOSAVE_DEBOUNCE_MS);
+    if (!autosaveHardFlushTimer) {
+      autosaveHardFlushTimer = setTimeout(() => {
+        autosaveHardFlushTimer = null;
+        flushAutosave();
+      }, AUTOSAVE_HARD_FLUSH_MS);
+    }
+  }
+
+  function flushAutosave() {
+    if (typeof MarkLinkStorage === 'undefined' || !MarkLinkStorage.isAvailable()) return;
+    const prefs = MarkLinkStorage.readPreferences(MODE);
+    if (!prefs.autosaveEnabled) return;
+    clearTimeout(autosaveTimer);
+    autosaveTimer = null;
+    if (autosaveHardFlushTimer) { clearTimeout(autosaveHardFlushTimer); autosaveHardFlushTimer = null; }
+    MarkLinkStorage.writeAutosave(MODE, getCurrentValue());
+  }
+
+  function tryRestoreAutosave() {
+    if (typeof MarkLinkStorage === 'undefined' || !MarkLinkStorage.isAvailable()) return false;
+    const rec = MarkLinkStorage.readAutosave(MODE);
+    if (!rec) return false;
+    setCurrentValue(rec.content);
+    if (savesUI) savesUI.showRestoredToast(rec.lastModified);
+    return true;
   }
 
   function handleFileLoad(event) {
