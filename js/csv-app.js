@@ -82,6 +82,14 @@ Nathan Kim,30,Minneapolis,Data Science,93000,Active`;
       fileInput.addEventListener('change', handleFileLoad);
     }
 
+    // Wire Compare CSV button
+    const compareBtn = document.getElementById('csv-compare-btn');
+    if (compareBtn && typeof CSVComparison !== 'undefined') {
+      compareBtn.addEventListener('click', () => {
+        CSVComparison.showComparisonModal(document.body);
+      });
+    }
+
     initStorageFeatures();
 
     // Load content: URL shared > autosave restore > default

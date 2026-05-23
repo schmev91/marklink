@@ -44,7 +44,8 @@ The project is a static Markdown, JSON, and CSV editor built with plain HTML, CS
   - `csv-editor.js`: CSV textarea with validation.
   - `csv-preview.js`: Interactive table with sticky headers, column sorting (asc/desc), per-column filtering, column visibility toggle, and search.
   - `csv-share.js`: Compresses/decompresses CSV for URL sharing.
-  - `csv-app.js`: Orchestrates CSV mode; also includes CSV → JSON conversion and CSV export.
+  - `csv-comparison.js`: CSV comparison modal supporting paste, file upload, and URL loading with detailed diff reporting (added/removed/modified rows with cell-level changes).
+  - `csv-app.js`: Orchestrates CSV mode; also includes CSV → JSON conversion, CSV export, and comparison feature integration.
 - **Assets**:
   - `css/style.css`: Unified stylesheet for all modes (Markdown, JSON, CSV), Saves panel, and CodeMirror skin.
   - **CDN Libraries** (loaded at runtime):
@@ -58,7 +59,7 @@ The project is a static Markdown, JSON, and CSV editor built with plain HTML, CS
 
 - **Markdown mode**: `index.html`, `/js/editor.js`, `/js/preview.js`, `/js/share.js`, `/js/app.js`
 - **JSON mode**: `json.html`, `/js/json-editor.js`, `/js/json-preview.js`, `/js/json-share.js`, `/js/json-app.js`
-- **CSV mode**: `csv.html`, `/js/csv-editor.js`, `/js/csv-preview.js`, `/js/csv-share.js`, `/js/csv-app.js`
+- **CSV mode**: `csv.html`, `/js/csv-editor.js`, `/js/csv-preview.js`, `/js/csv-share.js`, `/js/csv-app.js`, `/js/csv-comparison.js` (CSV validation/comparison modal)
 - **Shared features**: `/js/theme.js` (dark/light mode), `/js/splitter.js` (resizable panels), `/js/storage.js` (saves & autosave), `/js/saves-ui.js` (saves sidebar), `/js/vim-mode.js` (VIM keymap)
 - **Styling**: `/css/style.css`
 
@@ -70,7 +71,7 @@ The project is a static Markdown, JSON, and CSV editor built with plain HTML, CS
 4. Test functionality: 
    - **Markdown**: editing, toolbar actions, dark/light theme, Mermaid diagram rendering.
    - **JSON**: validation, tree/nodes view, search, prettify formatting.
-   - **CSV**: table rendering, column sorting, filtering, visibility, CSV export.
+   - **CSV**: table rendering, column sorting, filtering, visibility, CSV export, CSV comparison (paste/upload/URL).
    - **Shared**: resizable panels, dark/light mode, URL sharing, VIM mode toggle, local saves/autosave.
 5. For quick local testing, use a simple static server: `python -m http.server 8000` then open http://localhost:8000, or directly open HTML files in a browser.
 
@@ -106,3 +107,10 @@ This project uses several tools to support the development workflow:
 
 For feature specifications, implementation plans, and task tracking, see:
 - `specs/002-vim-local-storage/` — VIM mode and local storage feature documentation (spec, plan, tasks, data models, contracts)
+- `specs/003-csv-comparison/` — CSV comparison feature documentation (spec, plan, research, data-model, quickstart, contracts)
+
+<!-- SPECKIT START -->
+**Active Feature Plan**: [CSV Comparison](specs/003-csv-comparison/plan.md)  
+Branch: `003-csv-comparison`  
+Status: Phase 1 design complete (Phase 2 tasks pending via `/speckit.tasks`)
+<!-- SPECKIT END -->
