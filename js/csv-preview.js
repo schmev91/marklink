@@ -28,8 +28,8 @@ const CsvPreview = (() => {
 
   function init() {
     container = document.getElementById('csv-preview-content');
-    scrollContainer = document.getElementById('csv-scroll-container');
-    if (!container || !scrollContainer) return;
+    scrollContainer = container; // Use same element as scroll container
+    if (!container) return;
 
     // Wire search input (with debounce)
     const searchInput = document.getElementById('csv-search-input');
