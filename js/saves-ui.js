@@ -134,9 +134,20 @@ const MarkLinkSavesUI = (() => {
       delBtn.textContent = 'Delete';
       delBtn.addEventListener('click', () => onDelete(rec));
 
+      const copyBtn = document.createElement('button');
+      copyBtn.type = 'button';
+      copyBtn.className = 'saves-btn';
+      copyBtn.textContent = 'Copy';
+      copyBtn.setAttribute('aria-label', `Copy contents of ${rec.name}`);
+      copyBtn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        onCopy(rec);
+      });
+
       tdActions.appendChild(loadBtn);
       tdActions.appendChild(renameBtn);
       tdActions.appendChild(delBtn);
+      tdActions.appendChild(copyBtn);
 
       tr.appendChild(tdName);
       tr.appendChild(tdTime);
@@ -202,6 +213,53 @@ const MarkLinkSavesUI = (() => {
       if (!ok) return;
       MarkLinkStorage.deleteSave(mode, rec.id);
       refresh();
+    }
+
+    function onCopy(rec) {
+      // Try Clipboard API first (modern, preferred)
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(rec.content).then(
+          () => {
+            // Success
+            showToast(`Copied "${rec.name}" to clipboard`);
+          },
+          () => {
+            // Clipboard API rejected or failed, try fallback
+            attemptCopyFallback(rec);
+          }
+        );
+      } else {
+        // Clipboard API not available, use fallback
+        attemptCopyFallback(rec);
+      }
+    }
+
+    function attemptCopyFallback(rec) {
+      try {
+        // Create off-screen textarea
+        const textarea = document.createElement('textarea');
+        textarea.value = rec.content;
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        textarea.style.top = '-9999px';
+        document.body.appendChild(textarea);
+
+        // Select and copy
+        textarea.select();
+        const success = document.execCommand('copy');
+
+        // Clean up
+        document.body.removeChild(textarea);
+
+        if (success) {
+          showToast(`Copied "${rec.name}" to clipboard`);
+        } else {
+          showError('Copy failed — clipboard access unavailable');
+        }
+      } catch (err) {
+        // execCommand threw an exception or other error
+        showError('Copy failed — clipboard access unavailable');
+      }
     }
 
     function open() {
