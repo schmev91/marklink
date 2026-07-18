@@ -8,10 +8,11 @@ const CSVComparison = (() => {
 
   /**
    * Parse CSV text into 2D array of strings
-   * @param {string} csvText - Raw CSV text with line breaks and commas
+   * @param {string} csvText - Raw CSV text with line breaks and delimiters
+   * @param {string} delimiterChar - Delimiter character (default ',')
    * @returns {Array<Array<string>>} 2D array representing rows and columns
    */
-  function parseCSV(csvText) {
+  function parseCSV(csvText, delimiterChar = ',') {
     const result = [];
     let row = [];
     let field = '';
@@ -39,7 +40,7 @@ const CSVComparison = (() => {
         if (ch === '"') {
           inQuotes = true;
           i++;
-        } else if (ch === ',') {
+        } else if (ch === delimiterChar) {
           row.push(field);
           field = '';
           i++;
@@ -215,6 +216,12 @@ const CSVComparison = (() => {
             <button class="csv-method-tab active" data-method="paste">Paste Text</button>
             <button class="csv-method-tab" data-method="upload">Upload File</button>
             <button class="csv-method-tab" data-method="url">Load from URL</button>
+          </div>
+
+          <div class="csv-reference-delimiter-wrapper">
+            <label for="csv-reference-delimiter">Reference Delimiter:</label>
+            <select id="csv-reference-delimiter" class="csv-reference-delimiter">
+            </select>
           </div>
 
           <div id="csv-paste-input" class="csv-input-method-section active">
@@ -420,6 +427,19 @@ const CSVComparison = (() => {
       modalElement = createModal();
       element.appendChild(modalElement);
 
+      // Initialize reference delimiter select from CsvDelimiters
+      if (typeof CsvDelimiters !== 'undefined') {
+        const delimiterSelect = document.getElementById('csv-reference-delimiter');
+        if (delimiterSelect) {
+          CsvDelimiters.list().forEach(delim => {
+            const option = document.createElement('option');
+            option.value = delim.key;
+            option.textContent = delim.label;
+            delimiterSelect.appendChild(option);
+          });
+        }
+      }
+
       // Wire up close buttons
       document.getElementById('csv-comparison-close-modal-btn').addEventListener('click', closeComparisonModal);
       document.getElementById('csv-comparison-close-btn').addEventListener('click', closeComparisonModal);
@@ -429,6 +449,12 @@ const CSVComparison = (() => {
 
       // Setup modal handlers (tabs, file upload, URL loading)
       setupModalHandlers();
+    }
+
+    // Set reference delimiter to match current editor delimiter
+    const delimiterSelect = document.getElementById('csv-reference-delimiter');
+    if (delimiterSelect && typeof CsvApp !== 'undefined' && CsvApp.getCurrentDelimiter) {
+      delimiterSelect.value = CsvApp.getCurrentDelimiter();
     }
 
     // Clear previous result and input
@@ -479,8 +505,16 @@ const CSVComparison = (() => {
       }
     }
 
-    // Parse reference CSV
-    const referenceCSV = parseCSV(referenceText);
+    // Get reference delimiter
+    let referenceDelimiterChar = ',';
+    const delimiterSelect = document.getElementById('csv-reference-delimiter');
+    if (delimiterSelect && typeof CsvDelimiters !== 'undefined') {
+      const delim = CsvDelimiters.get(delimiterSelect.value);
+      if (delim) referenceDelimiterChar = delim.char;
+    }
+
+    // Parse reference CSV with reference delimiter
+    const referenceCSV = parseCSV(referenceText, referenceDelimiterChar);
     const referenceValidation = validateCSV(referenceCSV);
 
     if (!referenceValidation.isValid) {
@@ -488,9 +522,17 @@ const CSVComparison = (() => {
       return;
     }
 
-    // Get editor CSV
+    // Get editor CSV with editor's active delimiter
     const editorText = CsvEditor.getValue();
-    const editorCSV = parseCSV(editorText);
+    let editorDelimiterChar = ',';
+    if (typeof CsvApp !== 'undefined' && CsvApp.getCurrentDelimiter) {
+      const editorDelimKey = CsvApp.getCurrentDelimiter();
+      if (typeof CsvDelimiters !== 'undefined') {
+        const delim = CsvDelimiters.get(editorDelimKey);
+        if (delim) editorDelimiterChar = delim.char;
+      }
+    }
+    const editorCSV = parseCSV(editorText, editorDelimiterChar);
     const editorValidation = validateCSV(editorCSV);
 
     if (!editorValidation.isValid) {
