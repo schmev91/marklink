@@ -54,7 +54,7 @@ const MarkLinkStorage = (() => {
     return arr.slice().sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
   }
 
-  function upsertSave(mode, { id, name, content }) {
+  function upsertSave(mode, { id, name, content, meta }) {
     const trimmed = (name || '').trim();
     if (!trimmed || trimmed.length > 80) {
       throw new Error('Save name must be 1–80 characters.');
@@ -74,6 +74,7 @@ const MarkLinkStorage = (() => {
           mode: mode,
           lastModified: now,
         };
+        if (meta) record.meta = meta;
         list[idx] = record;
       }
     }
@@ -88,6 +89,7 @@ const MarkLinkStorage = (() => {
           mode: mode,
           lastModified: now,
         };
+        if (meta) record.meta = meta;
         list[collisionIdx] = record;
       } else {
         record = {
@@ -97,6 +99,7 @@ const MarkLinkStorage = (() => {
           mode: mode,
           lastModified: now,
         };
+        if (meta) record.meta = meta;
         list.push(record);
       }
     }
@@ -142,13 +145,15 @@ const MarkLinkStorage = (() => {
     return rec;
   }
 
-  function writeAutosave(mode, content) {
+  function writeAutosave(mode, content, meta) {
     if (typeof content !== 'string' || content.length === 0) {
       clearAutosave(mode);
       return;
     }
     try {
-      _writeJSON(_key(mode, 'autosave'), { content, lastModified: Date.now() });
+      const record = { content, lastModified: Date.now() };
+      if (meta) record.meta = meta;
+      _writeJSON(_key(mode, 'autosave'), record);
     } catch (err) {
       // R5: autosave failures are non-fatal; warn and skip.
       console.warn('MarkLinkStorage: autosave write failed', err);

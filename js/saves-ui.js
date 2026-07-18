@@ -4,7 +4,7 @@
  * Each editor page calls MarkLinkSavesUI.mount({...}) once.
  */
 const MarkLinkSavesUI = (() => {
-  function mount({ mode, getContent, setContent, onLoadDirty }) {
+  function mount({ mode, getContent, setContent, getMeta, setMeta, onLoadDirty }) {
     let overlay = null;
     let dialog = null;
     let listEl = null;
@@ -183,7 +183,9 @@ const MarkLinkSavesUI = (() => {
         if (!ok) return;
       }
       try {
-        MarkLinkStorage.upsertSave(mode, { name, content: getContent() });
+        const saveData = { name, content: getContent() };
+        if (getMeta) saveData.meta = getMeta();
+        MarkLinkStorage.upsertSave(mode, saveData);
         nameInput.value = '';
         clearError();
         refresh();
@@ -206,6 +208,7 @@ const MarkLinkSavesUI = (() => {
         if (!proceed) return;
       }
       setContent(rec.content);
+      if (setMeta && rec.meta) setMeta(rec.meta);
       lastLoadedSnapshot = rec.content;
       close();
     }

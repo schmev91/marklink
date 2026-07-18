@@ -21,7 +21,8 @@ const CsvShare = (() => {
     try {
       const decompressed = LZString.decompressFromEncodedURIComponent(compressed);
       if (decompressed) {
-        return decompressed;
+        const delimiter = params.get('delimiter') || 'csv';
+        return { content: decompressed, delimiter };
       }
     } catch (err) {
       console.error('Failed to decompress URL content:', err);
@@ -37,7 +38,14 @@ const CsvShare = (() => {
     }
 
     const compressed = LZString.compressToEncodedURIComponent(content);
-    const url = `${window.location.origin}${window.location.pathname}#content=${compressed}`;
+    let url = `${window.location.origin}${window.location.pathname}#content=${compressed}`;
+
+    const currentDelimiter = (typeof CsvApp !== 'undefined' && CsvApp.getCurrentDelimiter)
+      ? CsvApp.getCurrentDelimiter()
+      : 'csv';
+    if (currentDelimiter !== 'csv') {
+      url += `&delimiter=${encodeURIComponent(currentDelimiter)}`;
+    }
 
     navigator.clipboard.writeText(url).then(() => {
       showToast('Share link copied to clipboard!');
@@ -45,7 +53,8 @@ const CsvShare = (() => {
       fallbackCopy(url);
     });
 
-    history.replaceState(null, '', `#content=${compressed}`);
+    const hash = `#content=${compressed}${currentDelimiter !== 'csv' ? `&delimiter=${encodeURIComponent(currentDelimiter)}` : ''}`;
+    history.replaceState(null, '', hash);
   }
 
   function fallbackCopy(text) {
