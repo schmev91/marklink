@@ -51,6 +51,7 @@ const Theme = (() => {
     document.documentElement.setAttribute('data-theme', resolved);
     updateIcons(mode);
     updateHljsTheme(resolved);
+    updateToggleLabel(mode);
   }
 
   function updateIcons(mode) {
@@ -61,6 +62,22 @@ const Theme = (() => {
       sun.style.display = mode === 'light' ? 'block' : 'none';
       moon.style.display = mode === 'dark' ? 'block' : 'none';
       system.style.display = mode === 'system' ? 'block' : 'none';
+    }
+  }
+
+  // Label names the mode the *next* click will produce, not the current mode.
+  const NEXT_MODE_LABEL = {
+    light: 'Switch to dark theme',
+    dark: 'Switch to system theme',
+    system: 'Switch to light theme',
+  };
+
+  function updateToggleLabel(mode) {
+    const btn = document.getElementById('theme-toggle-btn');
+    if (btn) {
+      const label = NEXT_MODE_LABEL[mode];
+      btn.setAttribute('aria-label', label);
+      btn.setAttribute('title', label);
     }
   }
 
