@@ -15,10 +15,11 @@ const CsvPreview = (() => {
   let columnFilters = {};
   let globalSearch = '';
   let searchMatchCount = 0;
-  
+  let activeDelimiter = ',';
+
   // Filter index: maps column -> Set of row indices matching value
   let filterIndex = {};
-  
+
   // Virtual scrolling state
   let rowHeight = 40; // Estimated, will measure
   let visibleRange = { start: 0, end: 0 };
@@ -106,7 +107,7 @@ const CsvPreview = (() => {
             if (ch === '"') {
               inQuotes = true;
               i++;
-            } else if (ch === ',') {
+            } else if (ch === activeDelimiter) {
               row.push(field);
               field = '';
               i++;
@@ -548,6 +549,10 @@ const CsvPreview = (() => {
     if (headers.length > 0) renderTable();
   }
 
+  function setDelimiter(char) {
+    activeDelimiter = char;
+  }
+
   /* ---- Helpers ---- */
   function escapeHtml(text) {
     const div = document.createElement('div');
@@ -563,13 +568,14 @@ const CsvPreview = (() => {
     };
   }
 
-  return { 
-    init, 
-    render, 
-    toJSON, 
-    getHeaders, 
-    getRows, 
+  return {
+    init,
+    render,
+    toJSON,
+    getHeaders,
+    getRows,
     getFilteredRows,
-    onThemeChange 
+    onThemeChange,
+    setDelimiter
   };
 })();
