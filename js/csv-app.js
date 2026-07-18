@@ -27,6 +27,18 @@ Nathan Kim,30,Minneapolis,Data Science,93000,Active`;
   const AUTOSAVE_DEBOUNCE_MS = 1500;
   const AUTOSAVE_HARD_FLUSH_MS = 15000;
   let renderTimer = null;
+  let currentDelimiter = 'csv';
+
+  function applyDelimiter(key) {
+    const delim = CsvDelimiters.get(key);
+    if (!delim) return;
+    currentDelimiter = key;
+    const select = document.getElementById('csv-delimiter-select');
+    if (select) select.value = key;
+    if (CsvEditor.setDelimiter) CsvEditor.setDelimiter(delim.char);
+    if (CsvPreview.setDelimiter) CsvPreview.setDelimiter(delim.char);
+    scheduleRender();
+  }
 
   function init() {
     // Initialize modules
@@ -35,6 +47,23 @@ Nathan Kim,30,Minneapolis,Data Science,93000,Active`;
     CsvEditor.init();
     CsvPreview.init();
     CsvShare.init();
+
+    // Initialize delimiter selector
+    if (typeof CsvDelimiters !== 'undefined') {
+      const delimiterSelect = document.getElementById('csv-delimiter-select');
+      if (delimiterSelect) {
+        CsvDelimiters.list().forEach(delim => {
+          const option = document.createElement('option');
+          option.value = delim.key;
+          option.textContent = delim.label;
+          delimiterSelect.appendChild(option);
+        });
+        delimiterSelect.value = currentDelimiter;
+        delimiterSelect.addEventListener('change', (e) => {
+          applyDelimiter(e.target.value);
+        });
+      }
+    }
 
     // Wire theme changes
     Theme.onChange((theme) => {
@@ -314,5 +343,5 @@ Nathan Kim,30,Minneapolis,Data Science,93000,Active`;
     init();
   }
 
-  return { init };
+  return { init, applyDelimiter, getCurrentDelimiter: () => currentDelimiter };
 })();
