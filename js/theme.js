@@ -20,16 +20,12 @@ const Theme = (() => {
 
   function init() {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      currentTheme = saved;
-    } else {
-      currentTheme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-    }
+    currentTheme = saved || 'system';
     applyTheme(currentTheme);
 
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-      if (!localStorage.getItem(STORAGE_KEY)) {
-        setTheme(e.matches ? 'dark' : 'light');
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+      if (currentTheme === 'system') {
+        applyTheme('system');
       }
     });
 
@@ -43,18 +39,28 @@ const Theme = (() => {
     tickColorCycle();
   }
 
-  function applyTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
-    updateIcons(theme);
-    updateHljsTheme(theme);
+  function resolveTheme(mode) {
+    if (mode === 'system') {
+      return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    }
+    return mode;
   }
 
-  function updateIcons(theme) {
+  function applyTheme(mode) {
+    const resolved = resolveTheme(mode);
+    document.documentElement.setAttribute('data-theme', resolved);
+    updateIcons(mode);
+    updateHljsTheme(resolved);
+  }
+
+  function updateIcons(mode) {
     const sun = document.querySelector('.icon-sun');
     const moon = document.querySelector('.icon-moon');
-    if (sun && moon) {
-      sun.style.display = theme === 'dark' ? 'block' : 'none';
-      moon.style.display = theme === 'dark' ? 'none' : 'block';
+    const system = document.querySelector('.icon-system');
+    if (sun && moon && system) {
+      sun.style.display = mode === 'light' ? 'block' : 'none';
+      moon.style.display = mode === 'dark' ? 'block' : 'none';
+      system.style.display = mode === 'system' ? 'block' : 'none';
     }
   }
 
@@ -74,8 +80,11 @@ const Theme = (() => {
     if (onChangeCallback) onChangeCallback(theme);
   }
 
+  const CYCLE_ORDER = ['light', 'dark', 'system'];
+
   function toggle() {
-    setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+    const nextIndex = (CYCLE_ORDER.indexOf(currentTheme) + 1) % CYCLE_ORDER.length;
+    setTheme(CYCLE_ORDER[nextIndex]);
   }
 
   function get() {
