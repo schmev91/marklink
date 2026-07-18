@@ -25,7 +25,7 @@ const Theme = (() => {
 
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
       if (currentTheme === 'system') {
-        applyTheme('system');
+        setTheme('system');
       }
     });
 
@@ -58,11 +58,9 @@ const Theme = (() => {
     const sun = document.querySelector('.icon-sun');
     const moon = document.querySelector('.icon-moon');
     const system = document.querySelector('.icon-system');
-    if (sun && moon && system) {
-      sun.style.display = mode === 'light' ? 'block' : 'none';
-      moon.style.display = mode === 'dark' ? 'block' : 'none';
-      system.style.display = mode === 'system' ? 'block' : 'none';
-    }
+    if (sun) sun.style.display = mode === 'light' ? 'block' : 'none';
+    if (moon) moon.style.display = mode === 'dark' ? 'block' : 'none';
+    if (system) system.style.display = mode === 'system' ? 'block' : 'none';
   }
 
   // Label names the mode the *next* click will produce, not the current mode.
