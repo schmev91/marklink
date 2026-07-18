@@ -4,6 +4,11 @@
  * Each editor page calls MarkLinkSavesUI.mount({...}) once.
  */
 const MarkLinkSavesUI = (() => {
+  // Toast state (module-level, shared across mount calls on this page)
+  let liveRegion = null;
+  let currentToast = null;
+  let currentToastFadeOutTimeout = null;
+
   function mount({ mode, getContent, setContent, onLoadDirty }) {
     let overlay = null;
     let dialog = null;
@@ -230,16 +235,62 @@ const MarkLinkSavesUI = (() => {
       showError(message || 'Local storage is full.');
     }
 
-    function showRestoredToast(timestamp) {
-      const toast = document.createElement('div');
-      toast.className = 'saves-restored-toast';
-      toast.textContent = `Restored last session (${formatTime(timestamp)})`;
-      document.body.appendChild(toast);
-      requestAnimationFrame(() => toast.classList.add('visible'));
-      setTimeout(() => {
-        toast.classList.remove('visible');
-        setTimeout(() => toast.remove(), 400);
+    function showToast(message) {
+      // Create aria-live region if it doesn't exist
+      if (!liveRegion) {
+        liveRegion = document.createElement('div');
+        liveRegion.setAttribute('aria-live', 'polite');
+        liveRegion.style.position = 'absolute';
+        liveRegion.style.left = '-10000px';
+        liveRegion.style.width = '1px';
+        liveRegion.style.height = '1px';
+        liveRegion.style.overflow = 'hidden';
+        document.body.appendChild(liveRegion);
+      }
+
+      // Update aria-live region for screen reader announcement
+      liveRegion.textContent = message;
+
+      // Clear existing fade-out timeout if one is pending
+      if (currentToastFadeOutTimeout !== null) {
+        clearTimeout(currentToastFadeOutTimeout);
+      }
+
+      // Check if current toast element exists and is in the DOM
+      if (currentToast && currentToast.parentNode) {
+        // Reuse existing element: update text and ensure it's visible
+        currentToast.textContent = message;
+        // Ensure visible class is present (in case it was fading out)
+        currentToast.classList.add('visible');
+      } else {
+        // Create new toast element
+        currentToast = document.createElement('div');
+        currentToast.className = 'saves-restored-toast';
+        currentToast.textContent = message;
+        document.body.appendChild(currentToast);
+        // Add visible class via RAF for CSS transition
+        requestAnimationFrame(() => {
+          if (currentToast) {
+            currentToast.classList.add('visible');
+          }
+        });
+      }
+
+      // Set fade-out timeout
+      currentToastFadeOutTimeout = setTimeout(() => {
+        currentToast.classList.remove('visible');
+        setTimeout(() => {
+          if (currentToast) {
+            currentToast.remove();
+            currentToast = null;
+          }
+        }, 400);
+        currentToastFadeOutTimeout = null;
       }, 3500);
+    }
+
+    function showRestoredToast(timestamp) {
+      showToast(`Restored last session (${formatTime(timestamp)})`);
     }
 
     function setLoadedSnapshot(content) {
@@ -266,6 +317,7 @@ const MarkLinkSavesUI = (() => {
       refresh,
       showQuotaError,
       showRestoredToast,
+      showToast,
       setLoadedSnapshot,
     };
   }
