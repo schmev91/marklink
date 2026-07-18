@@ -283,6 +283,14 @@ Nathan Kim,30,Minneapolis,Data Science,93000,Active`;
     const encodingSelect = document.getElementById('csv-encoding-select');
     const encoding = encodingSelect ? encodingSelect.value : 'UTF-8';
 
+    // Auto-switch delimiter based on file extension
+    if (typeof CsvDelimiters !== 'undefined') {
+      const detectedDelimKey = CsvDelimiters.detectFromFilename(file.name);
+      if (detectedDelimKey) {
+        applyDelimiter(detectedDelimKey);
+      }
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => {
       CsvEditor.setValue(e.target.result);
@@ -315,16 +323,28 @@ Nathan Kim,30,Minneapolis,Data Science,93000,Active`;
       showToast('Nothing to download — paste some CSV first!');
       return;
     }
-    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+
+    let filename = 'marklink-data.csv';
+    let mimeType = 'text/csv;charset=utf-8;';
+
+    if (typeof CsvDelimiters !== 'undefined') {
+      const delim = CsvDelimiters.get(currentDelimiter);
+      if (delim) {
+        filename = `marklink-data${delim.extension}`;
+        mimeType = delim.mimeType;
+      }
+    }
+
+    const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'marklink-data.csv';
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast('CSV file downloaded!');
+    showToast(`${filename} downloaded!`);
   }
 
   function showToast(message) {
