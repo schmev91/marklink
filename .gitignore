@@ -2,3 +2,15 @@
 # MemPalace per-project files (issue #185)
 mempalace.yaml
 entities.json
+# graphify artifacts
+graphify-out/
+.graphifyignore
+
+# Claude Code local settings
+.claude/settings.json
+
+# Compound Engineering local files
+.compound-engineering/
+
+# Generated documentation
+docs/
