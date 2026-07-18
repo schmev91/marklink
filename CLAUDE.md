@@ -102,12 +102,15 @@ This project uses several tools to support the development workflow:
 - **Module organization**: Each editor mode (Markdown, JSON, CSV) follows a consistent pattern: `*-app.js` (orchestrator), `*-editor.js`, `*-preview.js`, `*-share.js`.
 - **Lazy loading**: CodeMirror is only loaded when VIM mode is first enabled, reducing initial page load time.
 - **LocalStorage**: All saves, autosave state, and preferences are persisted to `localStorage` using keys prefixed with `marklink.<mode>`.
+- **Shared vocabulary**: `CONCEPTS.md` defines core domain vocabulary (entities, named processes, status concepts) — relevant when orienting to the codebase or discussing domain concepts.
 
 ## References
 
 For feature specifications, implementation plans, and task tracking, see:
 - `specs/002-vim-local-storage/` — VIM mode and local storage feature documentation (spec, plan, tasks, data models, contracts)
 - `specs/003-csv-comparison/` — CSV comparison feature documentation (spec, plan, research, data-model, quickstart, contracts)
+
+For documented solutions to past problems (bugs, best practices, architectural patterns), see `docs/solutions/` — organized by category with YAML frontmatter fields like `module`, `tags`, and `problem_type` for searchability.
 
 <!-- SPECKIT START -->
 **Active Feature Plan**: [CSV Comparison](specs/003-csv-comparison/plan.md)  

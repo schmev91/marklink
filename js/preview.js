@@ -18,7 +18,7 @@ const Preview = (() => {
   }
 
   function configureMermaid() {
-    const isDark = Theme.get() === 'dark';
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     mermaid.initialize({
       startOnLoad: false,
       theme: isDark ? 'dark' : 'default',
@@ -145,12 +145,13 @@ const Preview = (() => {
     }
   }
 
-  function onThemeChange(theme) {
+  function onThemeChange() {
     // Clear mermaid cache since theme changed
     lastMermaidSources.clear();
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     mermaid.initialize({
       startOnLoad: false,
-      theme: theme === 'dark' ? 'dark' : 'default',
+      theme: isDark ? 'dark' : 'default',
       securityLevel: 'loose',
       fontFamily: 'Inter, sans-serif',
       logLevel: 'error',

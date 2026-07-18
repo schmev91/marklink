@@ -20,16 +20,12 @@ const Theme = (() => {
 
   function init() {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      currentTheme = saved;
-    } else {
-      currentTheme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-    }
+    currentTheme = saved || 'system';
     applyTheme(currentTheme);
 
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-      if (!localStorage.getItem(STORAGE_KEY)) {
-        setTheme(e.matches ? 'dark' : 'light');
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+      if (currentTheme === 'system') {
+        setTheme('system');
       }
     });
 
@@ -43,18 +39,43 @@ const Theme = (() => {
     tickColorCycle();
   }
 
-  function applyTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
-    updateIcons(theme);
-    updateHljsTheme(theme);
+  function resolveTheme(mode) {
+    if (mode === 'system') {
+      return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    }
+    return mode;
   }
 
-  function updateIcons(theme) {
+  function applyTheme(mode) {
+    const resolved = resolveTheme(mode);
+    document.documentElement.setAttribute('data-theme', resolved);
+    updateIcons(mode);
+    updateHljsTheme(resolved);
+    updateToggleLabel(mode);
+  }
+
+  function updateIcons(mode) {
     const sun = document.querySelector('.icon-sun');
     const moon = document.querySelector('.icon-moon');
-    if (sun && moon) {
-      sun.style.display = theme === 'dark' ? 'block' : 'none';
-      moon.style.display = theme === 'dark' ? 'none' : 'block';
+    const system = document.querySelector('.icon-system');
+    if (sun) sun.style.display = mode === 'light' ? 'block' : 'none';
+    if (moon) moon.style.display = mode === 'dark' ? 'block' : 'none';
+    if (system) system.style.display = mode === 'system' ? 'block' : 'none';
+  }
+
+  // Label names the mode the *next* click will produce, not the current mode.
+  const NEXT_MODE_LABEL = {
+    light: 'Switch to dark theme',
+    dark: 'Switch to system theme',
+    system: 'Switch to light theme',
+  };
+
+  function updateToggleLabel(mode) {
+    const btn = document.getElementById('theme-toggle-btn');
+    if (btn) {
+      const label = NEXT_MODE_LABEL[mode];
+      btn.setAttribute('aria-label', label);
+      btn.setAttribute('title', label);
     }
   }
 
@@ -74,8 +95,11 @@ const Theme = (() => {
     if (onChangeCallback) onChangeCallback(theme);
   }
 
+  const CYCLE_ORDER = ['light', 'dark', 'system'];
+
   function toggle() {
-    setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+    const nextIndex = (CYCLE_ORDER.indexOf(currentTheme) + 1) % CYCLE_ORDER.length;
+    setTheme(CYCLE_ORDER[nextIndex]);
   }
 
   function get() {
