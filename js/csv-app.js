@@ -27,6 +27,18 @@ Nathan Kim,30,Minneapolis,Data Science,93000,Active`;
   const AUTOSAVE_DEBOUNCE_MS = 1500;
   const AUTOSAVE_HARD_FLUSH_MS = 15000;
   let renderTimer = null;
+  let currentDelimiter = 'csv';
+
+  function applyDelimiter(key) {
+    const delim = CsvDelimiters.get(key);
+    if (!delim) return;
+    currentDelimiter = key;
+    const select = document.getElementById('csv-delimiter-select');
+    if (select) select.value = key;
+    if (CsvEditor.setDelimiter) CsvEditor.setDelimiter(delim.char);
+    if (CsvPreview.setDelimiter) CsvPreview.setDelimiter(delim.char);
+    scheduleRender();
+  }
 
   function init() {
     // Initialize modules
@@ -35,6 +47,23 @@ Nathan Kim,30,Minneapolis,Data Science,93000,Active`;
     CsvEditor.init();
     CsvPreview.init();
     CsvShare.init();
+
+    // Initialize delimiter selector
+    if (typeof CsvDelimiters !== 'undefined') {
+      const delimiterSelect = document.getElementById('csv-delimiter-select');
+      if (delimiterSelect) {
+        CsvDelimiters.list().forEach(delim => {
+          const option = document.createElement('option');
+          option.value = delim.key;
+          option.textContent = delim.label;
+          delimiterSelect.appendChild(option);
+        });
+        delimiterSelect.value = currentDelimiter;
+        delimiterSelect.addEventListener('change', (e) => {
+          applyDelimiter(e.target.value);
+        });
+      }
+    }
 
     // Wire theme changes
     Theme.onChange((theme) => {
@@ -93,9 +122,12 @@ Nathan Kim,30,Minneapolis,Data Science,93000,Active`;
     initStorageFeatures();
 
     // Load content: URL shared > autosave restore > default
-    const sharedContent = CsvShare.loadFromUrl();
-    if (sharedContent) {
-      setCurrentValue(sharedContent);
+    const sharedData = CsvShare.loadFromUrl();
+    if (sharedData) {
+      if (sharedData.delimiter) {
+        applyDelimiter(sharedData.delimiter);
+      }
+      setCurrentValue(sharedData.content);
     } else {
       const restored = tryRestoreAutosave();
       if (!restored) {
@@ -150,6 +182,12 @@ Nathan Kim,30,Minneapolis,Data Science,93000,Active`;
         mode: MODE,
         getContent: getCurrentValue,
         setContent: setCurrentValue,
+        getMeta: () => ({ delimiter: currentDelimiter }),
+        setMeta: (meta) => {
+          if (meta && meta.delimiter) {
+            applyDelimiter(meta.delimiter);
+          }
+        },
       });
       if (savesBtn) savesBtn.addEventListener('click', () => savesUI.open());
     }
@@ -235,13 +273,16 @@ Nathan Kim,30,Minneapolis,Data Science,93000,Active`;
     clearTimeout(autosaveTimer);
     autosaveTimer = null;
     if (autosaveHardFlushTimer) { clearTimeout(autosaveHardFlushTimer); autosaveHardFlushTimer = null; }
-    MarkLinkStorage.writeAutosave(MODE, getCurrentValue());
+    MarkLinkStorage.writeAutosave(MODE, getCurrentValue(), { delimiter: currentDelimiter });
   }
 
   function tryRestoreAutosave() {
     if (typeof MarkLinkStorage === 'undefined' || !MarkLinkStorage.isAvailable()) return false;
     const rec = MarkLinkStorage.readAutosave(MODE);
     if (!rec) return false;
+    if (rec.meta && rec.meta.delimiter) {
+      applyDelimiter(rec.meta.delimiter);
+    }
     setCurrentValue(rec.content);
     if (savesUI) savesUI.showRestoredToast(rec.lastModified);
     return true;
@@ -253,6 +294,14 @@ Nathan Kim,30,Minneapolis,Data Science,93000,Active`;
 
     const encodingSelect = document.getElementById('csv-encoding-select');
     const encoding = encodingSelect ? encodingSelect.value : 'UTF-8';
+
+    // Auto-switch delimiter based on file extension
+    if (typeof CsvDelimiters !== 'undefined') {
+      const detectedDelimKey = CsvDelimiters.detectFromFilename(file.name);
+      if (detectedDelimKey) {
+        applyDelimiter(detectedDelimKey);
+      }
+    }
 
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -286,16 +335,28 @@ Nathan Kim,30,Minneapolis,Data Science,93000,Active`;
       showToast('Nothing to download — paste some CSV first!');
       return;
     }
-    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+
+    let filename = 'marklink-data.csv';
+    let mimeType = 'text/csv;charset=utf-8;';
+
+    if (typeof CsvDelimiters !== 'undefined') {
+      const delim = CsvDelimiters.get(currentDelimiter);
+      if (delim) {
+        filename = `marklink-data${delim.extension}`;
+        mimeType = delim.mimeType;
+      }
+    }
+
+    const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'marklink-data.csv';
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast('CSV file downloaded!');
+    showToast(`${filename} downloaded!`);
   }
 
   function showToast(message) {
@@ -314,5 +375,5 @@ Nathan Kim,30,Minneapolis,Data Science,93000,Active`;
     init();
   }
 
-  return { init };
+  return { init, applyDelimiter, getCurrentDelimiter: () => currentDelimiter };
 })();

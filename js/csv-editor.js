@@ -6,6 +6,7 @@ const CsvEditor = (() => {
   let textarea;
   let validationEl;
   let validateTimer;
+  let activeDelimiter = ',';
 
   function init() {
     textarea = document.getElementById('csv-editor');
@@ -22,10 +23,14 @@ const CsvEditor = (() => {
   }
 
   function handleKeydown(e) {
-    // Tab inserts two spaces
+    // Tab behavior depends on active delimiter
     if (e.key === 'Tab') {
       e.preventDefault();
-      insertAtCursor('  ');
+      if (activeDelimiter === '\t') {
+        insertAtCursor('\t');
+      } else {
+        insertAtCursor('  ');
+      }
       return;
     }
   }
@@ -67,7 +72,7 @@ const CsvEditor = (() => {
     for (let i = 0; i < line.length; i++) {
       const ch = line[i];
       if (ch === '"') inQuotes = !inQuotes;
-      else if (ch === ',' && !inQuotes) count++;
+      else if (ch === activeDelimiter && !inQuotes) count++;
     }
     return count;
   }
@@ -120,5 +125,10 @@ const CsvEditor = (() => {
     return textarea;
   }
 
-  return { init, getValue, setValue, getElement, fireInput };
+  function setDelimiter(char) {
+    activeDelimiter = char;
+    validate();
+  }
+
+  return { init, getValue, setValue, getElement, fireInput, setDelimiter };
 })();

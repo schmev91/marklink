@@ -74,6 +74,10 @@
         </svg>
       </button>
       <div class="encoding-selector">
+        <select id="csv-delimiter-select" aria-label="Delimiter">
+        </select>
+      </div>
+      <div class="encoding-selector">
         <select id="csv-encoding-select" aria-label="File Encoding">
           <option value="UTF-8">UTF-8</option>
           <option value="Shift_JIS">Shift-JIS</option>
@@ -97,7 +101,7 @@
         </svg>
         <span class="btn-label-mobile-hide">Load</span>
       </button>
-      <input type="file" id="csv-file-input" accept=".csv" style="display: none;">
+      <input type="file" id="csv-file-input" accept=".csv,.tsv" style="display: none;">
       <button class="btn" id="csv-convert-json-btn" aria-label="Convert to JSON">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
@@ -261,6 +265,7 @@
   <!-- ===== Application Modules ===== -->
   <script src="js/theme.js"></script>
   <script src="js/splitter.js"></script>
+  <script src="js/csv-delimiters.js"></script>
   <script src="js/csv-editor.js"></script>
   <script src="js/csv-preview.js"></script>
   <script src="js/csv-share.js"></script>
