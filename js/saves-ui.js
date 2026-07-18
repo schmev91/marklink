@@ -12,6 +12,10 @@ const MarkLinkSavesUI = (() => {
     let autosaveCheckbox = null;
     let errorBanner = null;
     let lastLoadedSnapshot = getContent ? getContent() : '';
+    let liveRegion = null;
+    let currentToast = null;
+    let currentToastFadeOutTimeout = null;
+    let currentToastRemoveTimeout = null;
 
     function ensureBuilt() {
       if (overlay) return;
@@ -129,9 +133,23 @@ const MarkLinkSavesUI = (() => {
       delBtn.textContent = 'Delete';
       delBtn.addEventListener('click', () => onDelete(rec));
 
+      const copyBtn = document.createElement('button');
+      copyBtn.type = 'button';
+      copyBtn.className = 'saves-btn';
+      copyBtn.textContent = 'Copy';
+      copyBtn.setAttribute('aria-label', `Copy contents of ${rec.name}`);
+      copyBtn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        onCopy(rec);
+      });
+      // stopPropagation is defensive isolation only — the dblclick-to-rename
+      // listener lives on nameSpan, a sibling outside tdActions, so it can't
+      // actually be reached by bubbling from a click here.
+
       tdActions.appendChild(loadBtn);
       tdActions.appendChild(renameBtn);
       tdActions.appendChild(delBtn);
+      tdActions.appendChild(copyBtn);
 
       tr.appendChild(tdName);
       tr.appendChild(tdTime);
@@ -199,6 +217,42 @@ const MarkLinkSavesUI = (() => {
       refresh();
     }
 
+    function onCopy(rec) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(rec.content).then(
+          () => showToast(`Copied "${rec.name}" to clipboard`),
+          () => onCopyFallback(rec)
+        );
+      } else {
+        onCopyFallback(rec);
+      }
+    }
+
+    function onCopyFallback(rec) {
+      if (copyViaExecCommand(rec.content)) {
+        showToast(`Copied "${rec.name}" to clipboard`);
+      } else {
+        showError('Copy failed — clipboard access unavailable');
+      }
+    }
+
+    function copyViaExecCommand(text) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      textarea.style.top = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        return document.execCommand('copy');
+      } catch (err) {
+        return false;
+      } finally {
+        document.body.removeChild(textarea);
+      }
+    }
+
     function open() {
       ensureBuilt();
       refresh();
@@ -230,16 +284,62 @@ const MarkLinkSavesUI = (() => {
       showError(message || 'Local storage is full.');
     }
 
-    function showRestoredToast(timestamp) {
-      const toast = document.createElement('div');
-      toast.className = 'saves-restored-toast';
-      toast.textContent = `Restored last session (${formatTime(timestamp)})`;
-      document.body.appendChild(toast);
-      requestAnimationFrame(() => toast.classList.add('visible'));
-      setTimeout(() => {
-        toast.classList.remove('visible');
-        setTimeout(() => toast.remove(), 400);
+    function showToast(message) {
+      if (!liveRegion) {
+        liveRegion = document.createElement('div');
+        liveRegion.setAttribute('aria-live', 'polite');
+        liveRegion.style.position = 'absolute';
+        liveRegion.style.left = '-10000px';
+        liveRegion.style.width = '1px';
+        liveRegion.style.height = '1px';
+        liveRegion.style.overflow = 'hidden';
+        document.body.appendChild(liveRegion);
+      }
+      liveRegion.textContent = message;
+
+      // A second call while a toast is still showing (or fading) takes over
+      // that toast rather than stacking a new one — both pending timers must
+      // be cleared or the earlier call's removal timer fires later and rips
+      // out the toast that's now showing this call's message.
+      if (currentToastFadeOutTimeout !== null) {
+        clearTimeout(currentToastFadeOutTimeout);
+        currentToastFadeOutTimeout = null;
+      }
+      if (currentToastRemoveTimeout !== null) {
+        clearTimeout(currentToastRemoveTimeout);
+        currentToastRemoveTimeout = null;
+      }
+
+      if (currentToast && currentToast.parentNode) {
+        currentToast.textContent = message;
+        currentToast.classList.add('visible');
+      } else {
+        currentToast = document.createElement('div');
+        currentToast.className = 'saves-restored-toast';
+        currentToast.textContent = message;
+        document.body.appendChild(currentToast);
+        requestAnimationFrame(() => {
+          if (currentToast) {
+            currentToast.classList.add('visible');
+          }
+        });
+      }
+
+      currentToastFadeOutTimeout = setTimeout(() => {
+        currentToast.classList.remove('visible');
+        currentToastRemoveTimeout = setTimeout(() => {
+          if (currentToast) {
+            currentToast.remove();
+            currentToast = null;
+          }
+          currentToastRemoveTimeout = null;
+        }, 400);
+        currentToastFadeOutTimeout = null;
       }, 3500);
+    }
+
+    function showRestoredToast(timestamp) {
+      showToast(`Restored last session (${formatTime(timestamp)})`);
     }
 
     function setLoadedSnapshot(content) {
@@ -266,6 +366,7 @@ const MarkLinkSavesUI = (() => {
       refresh,
       showQuotaError,
       showRestoredToast,
+      showToast,
       setLoadedSnapshot,
     };
   }
