@@ -4,11 +4,6 @@
  * Each editor page calls MarkLinkSavesUI.mount({...}) once.
  */
 const MarkLinkSavesUI = (() => {
-  // Toast state (module-level, shared across mount calls on this page)
-  let liveRegion = null;
-  let currentToast = null;
-  let currentToastFadeOutTimeout = null;
-
   function mount({ mode, getContent, setContent, onLoadDirty }) {
     let overlay = null;
     let dialog = null;
@@ -17,6 +12,10 @@ const MarkLinkSavesUI = (() => {
     let autosaveCheckbox = null;
     let errorBanner = null;
     let lastLoadedSnapshot = getContent ? getContent() : '';
+    let liveRegion = null;
+    let currentToast = null;
+    let currentToastFadeOutTimeout = null;
+    let currentToastRemoveTimeout = null;
 
     function ensureBuilt() {
       if (overlay) return;
@@ -143,6 +142,9 @@ const MarkLinkSavesUI = (() => {
         event.stopPropagation();
         onCopy(rec);
       });
+      // stopPropagation is defensive isolation only — the dblclick-to-rename
+      // listener lives on nameSpan, a sibling outside tdActions, so it can't
+      // actually be reached by bubbling from a click here.
 
       tdActions.appendChild(loadBtn);
       tdActions.appendChild(renameBtn);
@@ -216,49 +218,38 @@ const MarkLinkSavesUI = (() => {
     }
 
     function onCopy(rec) {
-      // Try Clipboard API first (modern, preferred)
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(rec.content).then(
-          () => {
-            // Success
-            showToast(`Copied "${rec.name}" to clipboard`);
-          },
-          () => {
-            // Clipboard API rejected or failed, try fallback
-            attemptCopyFallback(rec);
-          }
+          () => showToast(`Copied "${rec.name}" to clipboard`),
+          () => onCopyFallback(rec)
         );
       } else {
-        // Clipboard API not available, use fallback
-        attemptCopyFallback(rec);
+        onCopyFallback(rec);
       }
     }
 
-    function attemptCopyFallback(rec) {
-      try {
-        // Create off-screen textarea
-        const textarea = document.createElement('textarea');
-        textarea.value = rec.content;
-        textarea.style.position = 'fixed';
-        textarea.style.left = '-9999px';
-        textarea.style.top = '-9999px';
-        document.body.appendChild(textarea);
-
-        // Select and copy
-        textarea.select();
-        const success = document.execCommand('copy');
-
-        // Clean up
-        document.body.removeChild(textarea);
-
-        if (success) {
-          showToast(`Copied "${rec.name}" to clipboard`);
-        } else {
-          showError('Copy failed — clipboard access unavailable');
-        }
-      } catch (err) {
-        // execCommand threw an exception or other error
+    function onCopyFallback(rec) {
+      if (copyViaExecCommand(rec.content)) {
+        showToast(`Copied "${rec.name}" to clipboard`);
+      } else {
         showError('Copy failed — clipboard access unavailable');
+      }
+    }
+
+    function copyViaExecCommand(text) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      textarea.style.top = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        return document.execCommand('copy');
+      } catch (err) {
+        return false;
+      } finally {
+        document.body.removeChild(textarea);
       }
     }
 
@@ -294,7 +285,6 @@ const MarkLinkSavesUI = (() => {
     }
 
     function showToast(message) {
-      // Create aria-live region if it doesn't exist
       if (!liveRegion) {
         liveRegion = document.createElement('div');
         liveRegion.setAttribute('aria-live', 'polite');
@@ -305,28 +295,29 @@ const MarkLinkSavesUI = (() => {
         liveRegion.style.overflow = 'hidden';
         document.body.appendChild(liveRegion);
       }
-
-      // Update aria-live region for screen reader announcement
       liveRegion.textContent = message;
 
-      // Clear existing fade-out timeout if one is pending
+      // A second call while a toast is still showing (or fading) takes over
+      // that toast rather than stacking a new one — both pending timers must
+      // be cleared or the earlier call's removal timer fires later and rips
+      // out the toast that's now showing this call's message.
       if (currentToastFadeOutTimeout !== null) {
         clearTimeout(currentToastFadeOutTimeout);
+        currentToastFadeOutTimeout = null;
+      }
+      if (currentToastRemoveTimeout !== null) {
+        clearTimeout(currentToastRemoveTimeout);
+        currentToastRemoveTimeout = null;
       }
 
-      // Check if current toast element exists and is in the DOM
       if (currentToast && currentToast.parentNode) {
-        // Reuse existing element: update text and ensure it's visible
         currentToast.textContent = message;
-        // Ensure visible class is present (in case it was fading out)
         currentToast.classList.add('visible');
       } else {
-        // Create new toast element
         currentToast = document.createElement('div');
         currentToast.className = 'saves-restored-toast';
         currentToast.textContent = message;
         document.body.appendChild(currentToast);
-        // Add visible class via RAF for CSS transition
         requestAnimationFrame(() => {
           if (currentToast) {
             currentToast.classList.add('visible');
@@ -334,14 +325,14 @@ const MarkLinkSavesUI = (() => {
         });
       }
 
-      // Set fade-out timeout
       currentToastFadeOutTimeout = setTimeout(() => {
         currentToast.classList.remove('visible');
-        setTimeout(() => {
+        currentToastRemoveTimeout = setTimeout(() => {
           if (currentToast) {
             currentToast.remove();
             currentToast = null;
           }
+          currentToastRemoveTimeout = null;
         }, 400);
         currentToastFadeOutTimeout = null;
       }, 3500);
