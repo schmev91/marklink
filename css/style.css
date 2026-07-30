@@ -277,6 +277,14 @@ body {
   border-right: none;
 }
 
+/* Preview hidden: the editor fills the space it vacated.
+   `!important` beats the inline width; `:not(.collapsed)` keeps this rule from
+   out-specifying .editor-panel.collapsed when both panels are collapsed. */
+.main-container.preview-hidden .editor-panel:not(.collapsed) {
+  width: auto !important;
+  flex: 1;
+}
+
 /* Panel header */
 .panel-header {
   height: var(--toolbar-height);
@@ -748,6 +756,20 @@ body {
   .editor-panel:not(.collapsed) {
     width: 100% !important;
     height: 45%;
+  }
+
+  /* Stacked counterpart: fill the height below the header, not the split 45% */
+  .main-container.preview-hidden .editor-panel:not(.collapsed) {
+    width: 100% !important;
+    height: auto;
+    flex: 1;
+  }
+
+  /* Zeroing width collapses a panel in the row layout only; stacked, the
+     collapsed preview keeps its content height and steals space from above. */
+  .preview-panel.collapsed {
+    height: 0 !important;
+    min-height: 0 !important;
   }
 
   .splitter {
