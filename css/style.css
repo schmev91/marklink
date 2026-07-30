@@ -765,6 +765,13 @@ body {
     flex: 1;
   }
 
+  /* Zeroing width collapses a panel in the row layout only; stacked, the
+     collapsed preview keeps its content height and steals space from above. */
+  .preview-panel.collapsed {
+    height: 0 !important;
+    min-height: 0 !important;
+  }
+
   .splitter {
     width: 100%;
     height: var(--splitter-width);
