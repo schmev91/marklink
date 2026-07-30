@@ -137,6 +137,8 @@ const Splitter = (() => {
   function updateSplitterState() {
     const anyCollapsed = editorPanel.classList.contains('collapsed') || previewPanel.classList.contains('collapsed');
     splitter.classList.toggle('has-collapsed', anyCollapsed);
+    // Lets CSS expand the editor to fill the space a collapsed preview vacated
+    mainContainer?.classList.toggle('preview-hidden', previewPanel.classList.contains('collapsed'));
   }
 
   function updateToggleButtons() {
